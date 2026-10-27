@@ -1,13 +1,4 @@
-## InvWithLinq IFL Recipes
 
-This plugin highlights items in your Inventory and (optionally) Stash based on rules written in IFL (Item Filter Language). Each `.ifl` file returns true/false for a given item; if true, the item is highlighted with the rule's configured color.
-
-- Config folder: place `.ifl` files under your ExileCore config path for `InvWithLinq` (e.g., `config/InvWithLinq/`).
-- Rule selection and priority: enable/disable and order files in the plugin settings. The first enabled file that matches determines the color.
-- Comments: start lines with `//`.
-- Quick testing: use the `Filter Test` textbox in settings; hover an item to see if the expression matches.
-
----
 
 ### 1) Expression building blocks
 
