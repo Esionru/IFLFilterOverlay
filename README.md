@@ -354,9 +354,3 @@ Caveat: This `InvWithLinq` plugin highlights Inventory and Stash. Vendor/NPC usa
 
 ---
 
-### 11) Tips
-
-- Keep files focused. Create multiple `.ifl` files (e.g., `good_maps.ifl`, `bad_maps.ifl`, `ranger_bows.ifl`) and order them by priority in the plugin settings.
-- Prefer numeric thresholds to emulate tiers where explicit tier info is unavailable.
-- Use `Count` patterns to express flexible N-of-M requirements instead of long chains of `||`.
-- When testing, paste expressions into the `Filter Test` box and hover an item; the plugin will log whether it matched.
