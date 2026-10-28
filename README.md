@@ -1,6 +1,6 @@
 # IFL FilterOverlay
 
-An [ExileApi](https://github.com/exApiTools/ExileApi) (ExileCore) plugin for Path of Exile that draws a **colored frame around items** in your **inventory**, **stash** and the **NPC vendor window** when they match rules you write.
+An [ExileApi](https://github.com/exApiTools/ExileApi-Compiled) (ExileCore) plugin for Path of Exile that draws a **colored frame around items** in your **inventory**, **stash** and the **NPC vendor window** when they match rules you write.
 
 Rules are written in the **ItemFilterLibrary (IFL)** expression syntax, the same one used by `InvWithLinq` / `NPCInvWithLinq`, so existing expressions can be pasted in as-is. On top of that the plugin adds:
 
@@ -562,4 +562,4 @@ Special stash tabs (currency tab, fragment tab, map tab, ...) have a different l
 ## Credits
 
 - Expression engine and syntax: `ItemFilterLibrary` and the [`InvWithLinq`](https://github.com/DaxxTrias/InvWithLinq) / `NPCInvWithLinq` family of plugins.
-- Built on [ExileApi](https://github.com/exApiTools/ExileApi).
+- Built on [ExileApi](https://github.com/exApiTools/ExileApi-Compiled).
