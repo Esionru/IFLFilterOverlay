@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using ExileCore;
+using ExileCore.PoEMemory;
 using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.Elements.InventoryElements;
 using ExileCore.PoEMemory.MemoryObjects;
@@ -49,6 +50,11 @@ public class FilterOverlaySettings : ISettings
     public ToggleNode InInventory { get; set; } = new ToggleNode(true);
     public ToggleNode InStash { get; set; } = new ToggleNode(true);
     public ToggleNode InVendor { get; set; } = new ToggleNode(true);
+    // any other window with item icons (e.g. Kingsmarch "Rewards"), learned by hovering an item or by a one-time scan
+    public ToggleNode InOtherWindows { get; set; } = new ToggleNode(true);
+
+    // UI tree index paths (from IngameUi) of the learned item containers, e.g. "13,7,0,2"
+    public List<string> ExtraContainers { get; set; } = new();
     public RangeNode<int> Thickness { get; set; } = new RangeNode<int>(2, 1, 6);
 
     // Disabled categories (file name without .txt)
@@ -163,6 +169,11 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
     private readonly Dictionary<long, (Color? Col, long Time)> _cache = new();
     private readonly Dictionary<string, (IflFilter Filter, string Error)> _compiled = new();
 
+    // learned item containers (Kingsmarch rewards, ...): cached item lists per container path
+    private readonly Dictionary<string, List<NormalInventoryItem>> _extraItems = new();
+    private long _extraTick;
+    private string _learnMsg;
+
     // categories (files)
     private List<FilterCategory> _cats = new();
     private bool _scanned;
@@ -232,6 +243,9 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
             if (ph != null && ph.IsVisible)
                 Process(ph.TabContainer?.VisibleStash?.VisibleInventoryItems);
         }
+
+        if (Settings.InOtherWindows)
+            DrawExtraContainers(ui);
     }
 
     private void Process(IList<NormalInventoryItem> items)
@@ -243,7 +257,7 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
         foreach (var inv in items)
         {
             var ent = inv?.Item;
-            if (ent == null || !ent.IsValid) continue;
+            if (ent == null || !ent.IsValid || !inv.IsVisible) continue;
 
             // evaluate once per second per item to avoid reading memory every frame
             if (!_cache.TryGetValue(ent.Address, out var c) || now - c.Time > 1000)
@@ -306,6 +320,192 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
         return c;
     }
     // ---------------------------------------------------------------------------------------------
+
+    // ---------------------------------------------------------------- other windows (learned containers)
+
+    private HashSet<long> HandledWindows(Element ui)
+    {
+        var set = new HashSet<long>();
+        void Add(Element e) { if (e != null && e.Address != 0) set.Add(e.Address); }
+        var iu = GameController.IngameState.IngameUi;
+        Add(iu.InventoryPanel);
+        Add(iu.StashElement);
+        Add(iu.PurchaseWindow);
+        Add(iu.PurchaseWindowHideout);
+        return set;
+    }
+
+    /// <summary>Index path from root to el (e.g. "13,7,0"), or null if el is not below root.</summary>
+    private static string PathOf(Element root, Element el)
+    {
+        var idx = new List<int>();
+        var cur = el;
+        for (var guard = 0; guard < 24 && cur != null && cur.Address != 0; guard++)
+        {
+            if (cur.Address == root.Address)
+            {
+                idx.Reverse();
+                return string.Join(",", idx);
+            }
+
+            var parent = cur.Parent;
+            if (parent == null || parent.Address == 0) return null;
+
+            var kids = parent.Children;
+            var i = -1;
+            if (kids != null)
+                for (var k = 0; k < kids.Count; k++)
+                    if (kids[k].Address == cur.Address) { i = k; break; }
+
+            if (i < 0) return null;
+            idx.Add(i);
+            cur = parent;
+        }
+
+        return null;
+    }
+
+    private static Element ResolvePath(Element root, string path)
+    {
+        try
+        {
+            var el = root;
+            foreach (var part in path.Split(','))
+            {
+                var kids = el.Children;
+                var i = int.Parse(part);
+                if (kids == null || i < 0 || i >= kids.Count) return null;
+                el = kids[i];
+            }
+            return el != null && el.Address != 0 ? el : null;
+        }
+        catch { return null; }
+    }
+
+    private static List<NormalInventoryItem> ItemsOf(Element container)
+    {
+        var list = new List<NormalInventoryItem>();
+        var kids = container?.Children;
+        if (kids == null) return list;
+
+        foreach (var k in kids)
+        {
+            if (k == null || !k.IsVisible) continue;
+            var ni = k.AsObject<NormalInventoryItem>();
+            var ent = ni?.Item;
+            if (ent != null && ent.IsValid && ent.GetComponent<Base>() != null) list.Add(ni);
+        }
+
+        return list;
+    }
+
+    /// <summary>Called when a new item is hovered: if it lives outside the known windows, remember its container.</summary>
+    private void TryLearn(Element hoverEl)
+    {
+        if (!Settings.InOtherWindows) return;
+
+        try
+        {
+            var ui = GameController.IngameState.IngameUi;
+            var handled = HandledWindows(ui);
+
+            // inside a window we already handle? then nothing to learn
+            var cur = hoverEl;
+            for (var i = 0; i < 16 && cur != null && cur.Address != 0; i++)
+            {
+                if (handled.Contains(cur.Address)) return;
+                if (cur.Address == ui.Address) break;
+                cur = cur.Parent;
+            }
+
+            var container = hoverEl.Parent;
+            if (container == null || container.Address == 0) return;
+
+            var path = PathOf(ui, container);
+            if (path == null || Settings.ExtraContainers.Contains(path)) return;
+
+            Settings.ExtraContainers.Add(path);
+            _extraTick = 0;
+            _learnMsg = "Learned a new item window (path " + path + ").";
+        }
+        catch { /* best effort */ }
+    }
+
+    /// <summary>One-time scan of the whole visible UI tree (heavy, runs only on button press).</summary>
+    private void ScanForItemWindows()
+    {
+        var found = 0;
+        try
+        {
+            var ui = GameController.IngameState.IngameUi;
+            var handled = HandledWindows(ui);
+            var parents = new HashSet<long>();
+            var budget = 40000;
+
+            void Walk(Element el, int depth)
+            {
+                if (el == null || el.Address == 0 || budget-- <= 0 || depth > 14 || !el.IsVisible ||
+                    handled.Contains(el.Address)) return;
+
+                // an item icon has a size between one cell and a big two-handed weapon
+                var r = el.GetClientRect();
+                if (r.Width >= 20 && r.Height >= 20 && r.Width <= 400 && r.Height <= 500)
+                {
+                    var ni = el.AsObject<NormalInventoryItem>();
+                    var ent = ni?.Item;
+                    if (ent != null && ent.IsValid && ent.GetComponent<Base>() != null)
+                    {
+                        var parent = el.Parent;
+                        if (parent != null && parents.Add(parent.Address))
+                        {
+                            var path = PathOf(ui, parent);
+                            if (path != null && !Settings.ExtraContainers.Contains(path))
+                            {
+                                Settings.ExtraContainers.Add(path);
+                                found++;
+                            }
+                        }
+                        return; // do not descend into the item itself
+                    }
+                }
+
+                var kids = el.Children;
+                if (kids == null) return;
+                foreach (var k in kids) Walk(k, depth + 1);
+            }
+
+            Walk(ui, 0);
+        }
+        catch (Exception e)
+        {
+            _learnMsg = "Scan failed: " + e.Message;
+            return;
+        }
+
+        _extraTick = 0;
+        _learnMsg = found > 0
+            ? $"Found {found} item window(s)."
+            : "No new item windows found. Open the window with items and try again.";
+    }
+
+    private void DrawExtraContainers(Element ui)
+    {
+        if (Settings.ExtraContainers.Count == 0) return;
+        var now = Environment.TickCount64;
+
+        if (now - _extraTick > 500)
+        {
+            _extraTick = now;
+            _extraItems.Clear();
+            foreach (var path in Settings.ExtraContainers.ToList())
+            {
+                var el = ResolvePath(ui, path);
+                _extraItems[path] = el != null && el.IsVisible ? ItemsOf(el) : new List<NormalInventoryItem>();
+            }
+        }
+
+        foreach (var list in _extraItems.Values) Process(list);
+    }
 
     // ---------------------------------------------------------------- category files
 
@@ -486,6 +686,7 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
                 _hoverAddr = ent.Address;
                 _hoverBuilt = now;
                 RebuildHover(ent);
+                TryLearn(hover);
             }
 
             UpdateTest();
@@ -626,10 +827,30 @@ public class FilterOverlayPlugin : BaseSettingsPlugin<FilterOverlaySettings>
         BuildCatalog();
         _cache.Clear(); // while settings are open, re-evaluate frames immediately
 
+        DrawOtherWindows();
         DrawCategories();
         DrawRules();
         DrawEditor();
         DrawHints();
+    }
+
+    private void DrawOtherWindows()
+    {
+        if (!Settings.InOtherWindows) return;
+
+        ImGui.Separator();
+        ImGui.TextDisabled("Other item windows (e.g. Kingsmarch Rewards): hover an item in that window once,");
+        ImGui.TextDisabled("or open it and press the scan button. The window is remembered afterwards.");
+
+        if (ImGui.Button("Find item windows now")) ScanForItemWindows();
+        ImGui.SameLine();
+        if (ImGui.Button($"Forget learned ({Settings.ExtraContainers.Count})"))
+        {
+            Settings.ExtraContainers.Clear();
+            _extraItems.Clear();
+        }
+
+        if (_learnMsg != null) ImGui.TextDisabled(F(_learnMsg));
     }
 
     private void DrawCategories()
