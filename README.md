@@ -1,6 +1,6 @@
 # IFL FilterOverlay
 
-An ExileApi plugin for Path of Exile that draws a **colored frame around items** in your **inventory**, **stash** and the **NPC vendor window** when they match rules you write.
+An [ExileApi](https://github.com/exApiTools/ExileApi) (ExileCore) plugin for Path of Exile that draws a **colored frame around items** in your **inventory**, **stash** and the **NPC vendor window** when they match rules you write.
 
 Rules are written in the **ItemFilterLibrary (IFL)** expression syntax, the same one used by `InvWithLinq` / `NPCInvWithLinq`, so existing expressions can be pasted in as-is. On top of that the plugin adds:
 
@@ -15,7 +15,7 @@ Rules are written in the **ItemFilterLibrary (IFL)** expression syntax, the same
 
 | | |
 |---|---|
-| Where it draws | Player inventory, stash, NPC vendor window (each can be switched off) |
+| Where it draws | Player inventory, stash, NPC vendor window and any other window with item icons, e.g. the Kingsmarch "Rewards" window (each can be switched off) |
 | Rule language | ItemFilterLibrary expressions (`HasTag`, `ItemStats[GameStat.X]`, `BaseName`, `PlayerInfo.Level`, `.Count(x => x)`, ...) |
 | Storage | Plain text files, one file per category, in the plugin config folder |
 | Categories | Any number of `.txt` files; enable / disable each one with a checkbox |
@@ -180,7 +180,7 @@ HasTag("Ring") && ItemStats[GameStat.BaseMaximumLife] < 40
 ## The settings window
 
 ```
-In Inventory / In Stash / In Vendor      toggles for where frames are drawn
+In Inventory / In Stash / In Vendor / In Other Windows   toggles for where frames are drawn
 Thickness                                frame width
 
 Categories (.txt files, top to bottom)
@@ -530,6 +530,8 @@ The same rules apply to the NPC vendor window (**In Vendor** toggle, both the to
 SocketInfo.SocketNumber >= 1
 ```
 
+**In Other Windows** covers windows the plugin has no built-in support for, such as the Kingsmarch "Rewards" window. Hover any item in such a window once and the plugin remembers where that window's items live (the learned UI paths are stored in the plugin settings). If hovering does not work, open the window and press **Find item windows now** for a one-time scan. **Forget learned** clears the list.
+
 Special stash tabs (currency tab, fragment tab, map tab, ...) have a different layout than normal tabs and are not covered by the stash highlighting yet.
 
 ---
@@ -560,4 +562,4 @@ Special stash tabs (currency tab, fragment tab, map tab, ...) have a different l
 ## Credits
 
 - Expression engine and syntax: `ItemFilterLibrary` and the [`InvWithLinq`](https://github.com/DaxxTrias/InvWithLinq) / `NPCInvWithLinq` family of plugins.
-- Built on ExileApi.
+- Built on [ExileApi](https://github.com/exApiTools/ExileApi).
