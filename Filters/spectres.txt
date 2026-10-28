@@ -1,0 +1,14 @@
+// IFL FilterOverlay category file. Every rule starts with a line:
+// ## Name | #RRGGBB | on
+// followed by an IFL expression (may span several lines, comments start with //).
+
+## Rule 1 | #FF0000 | on
+BaseName == "Perfect Forest Tiger"
+|| BaseName == "Perfect Guardian Turtle"
+|| BaseName == "Perfect Warlord"
+|| BaseName == "Perfect Judgemental Spirit"
+|| BaseName == "Perfect Spirit of Fortune"
+|| BaseName == "Perfect Naval Officer"
+|| BaseName == "Perfect Forest Warrior"
+|| BaseName == "Perfect Hydra"
+

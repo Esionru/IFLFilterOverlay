@@ -1,0 +1,15 @@
+// ItemHighlight category file. Every rule starts with a line:
+// ## Name | #RRGGBB | on
+// followed by an IFL expression (may span several lines, comments start with //).
+
+## light radius | #FF0000 | on
+ItemStats[GameStat.LightRadiusPct] >= 10
+
+## +1 fire | #FF0000 | on
+ItemStats[GameStat.FireSpellSkillGemLevel] >= 1
+
+## resist | #FF0000 | on
+ItemStats[GameStat.BaseFireDamageResistancePct]
+  + ItemStats[GameStat.BaseColdDamageResistancePct]
+  + ItemStats[GameStat.BaseLightningDamageResistancePct] >= 60
+

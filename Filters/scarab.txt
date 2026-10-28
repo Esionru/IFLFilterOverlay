@@ -1,0 +1,43 @@
+// Scarabs worth 10c and up, most expensive first | league: Allflame (poe.ninja prices)
+// Prices drift: run Update-DivCards.ps1 -Type Scarab -Label Scarabs -MinChaos 10 to regenerate.
+
+## Scarabs - 100c and up | #FF2020 | on
+BaseName == "Horned Scarab of Preservation"
+|| BaseName == "Horned Scarab of Bloodlines"
+|| BaseName == "Ultimatum Scarab of Catalysing"
+|| BaseName == "Breach Scarab of Resonant Cascade"
+|| BaseName == "Harvest Scarab of Cornucopia"
+|| BaseName == "Harvest Scarab of Doubling"
+|| BaseName == "Horned Scarab of Pandemonium"
+|| BaseName == "Cartography Scarab of Risk"
+|| BaseName == "Ambush Scarab of Containment"
+
+## Scarabs - 30c to 100c | #FF8800 | on
+BaseName == "Horned Scarab of Awakening"
+|| BaseName == "Kalguuran Scarab of Refinement"
+|| BaseName == "Domination Scarab of Terrors"
+|| BaseName == "Legion Scarab of Eternal Conflict"
+|| BaseName == "Trarthan Scarab of Surprising Alliances"
+|| BaseName == "Essence Scarab of Calcification"
+|| BaseName == "Scarab of Wisps"
+|| BaseName == "Incursion Scarab of Timelines"
+|| BaseName == "Divination Scarab of The Cloister"
+|| BaseName == "Delirium Scarab of Paranoia"
+
+## Scarabs - 10c to 30c | #FFD700 | on
+BaseName == "Cartography Scarab of Corruption"
+|| BaseName == "Horned Scarab of Nemeses"
+|| BaseName == "Blight Scarab of Blooming"
+|| BaseName == "Ritual Scarab of Abundance"
+|| BaseName == "Abyss Scarab of the Consort"
+|| BaseName == "Legion Scarab of Treasures"
+|| BaseName == "Bestiary Scarab of Duplicating"
+|| BaseName == "Divination Scarab of Pilfering"
+|| BaseName == "Bestiary Scarab of the Herd"
+|| BaseName == "Abyss Scarab"
+|| BaseName == "Scarab of Monstrous Lineage"
+|| BaseName == "Ambush Scarab of Discernment"
+|| BaseName == "Breach Scarab of the Incensed Swarm"
+|| BaseName == "Trarthan Scarab of Infamy"
+|| BaseName == "Ultimatum Scarab of Dueling"
+|| BaseName == "Essence Scarab of Adaptation"

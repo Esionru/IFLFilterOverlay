@@ -1,0 +1,15 @@
+// IFL FilterOverlay category file. Every rule starts with a line:
+// ## Name | #RRGGBB | on
+// followed by an IFL expression (may span several lines, comments start with //).
+
+## Rule 1 | #FF0000 | on
+BaseName == "Divine Orb"
+|| BaseName == "Fracturing Orb"
+|| BaseName == "Orb of Annulment"
+|| BaseName == "Mirror of Kalandra"
+|| BaseName == "Mirror Shard"
+|| BaseName == "Hinekora's Lock"
+|| BaseName == "Valdo's Puzzle Box"
+|| BaseName == "Voidborn Reliquary Key"
+|| BaseName == "Gift to the Goddess"
+

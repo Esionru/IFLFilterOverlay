@@ -1,0 +1,10 @@
+// IFL FilterOverlay category file. Every rule starts with a line:
+// ## Name | #RRGGBB | on
+// followed by an IFL expression (may span several lines, comments start with //).
+
+## Rule 1 | #FF0000 | on
+BaseName == "Omen of Fortune"
+|| BaseName == "Omen of Connections"
+|| BaseName == "Omen of Amelioration"
+|| BaseName == "Omen of Trichromatism"
+
